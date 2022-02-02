@@ -8,6 +8,9 @@ import numpy as np
 from statistics import mean, stdev
 from matplotlib import pyplot as plt
 import os
+os.environ["CUDA_DEVICE_ORDER"] = "PCI_BUS_ID"
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
+
 import keras.backend as K
 import tensorflow as tf
 from keras.models import Sequential
@@ -23,32 +26,19 @@ from datetime import datetime
 import warnings
 warnings.simplefilter(action='ignore')
 
-config = tf.ConfigProto()
-config.gpu_options.allow_growth = True
-session = tf.Session(config=config)
-
-
-
+    
 startTime = datetime.now()
+#config = tf.ConfigProto()
+#config.gpu_options.allow_growth = True
+#session = tf.Session(config=config)
+
+#%%
 
 def mish(inputs):
     return inputs * tf.nn.tanh(tf.nn.softplus(inputs))
 
 def root_mean_squared_error(y_true, y_pred):
     return K.sqrt(K.mean(K.square(y_pred - y_true))) 
-
-# Reading the dataset
-df = pd.read_csv('Datasets/iofrol_updated.csv')
-df.head()
-values = pd.DataFrame()
-values['Id'] =  range(0, 1)
-values['env'] = 'Iofrol'
-
-
-X = df[['Duration', 'E1','E2','E3', 'LastRunFeature','DIST','CHANGE_IN_STATUS']] # Defining feature variable
-Y = df['PRIORITY_VALUE'] # Defining label variable
-MSE_list=[] # mean square error list
-R2_list=[]  
 
 def split_dataset():
     # splitting dataset, 80% training and 20% testing
@@ -138,8 +128,20 @@ def regression_line(y_test, y_test_pred):
     save_figures(plt, 'regression_line_iofrol')
     plt.close()
 
-# ### Deep Neural Network 
-    
+#%%
+# Reading the dataset
+df = pd.read_csv('datasets/iofrol_updated.csv')
+df.head()
+values = pd.DataFrame()
+values['Id'] =  range(0, 1)
+values['env'] = 'Iofrol'
+
+X = df[['Duration', 'E1','E2','E3', 'LastRunFeature','DIST','CHANGE_IN_STATUS']] # Defining feature variable
+Y = df['PRIORITY_VALUE'] # Defining label variable
+MSE_list=[] # mean square error list
+R2_list=[]  
+#%% ### Deep Neural Network 
+
 X_train, X_test, y_train, y_test = split_dataset()
   
 model = Sequential()
@@ -158,8 +160,7 @@ y_test_pred = prediction_function(X_train, X_test)
 MSE_list.append(mean_squared_error(y_test, y_test_pred))
 R2_list.append(r2_score(y_test, y_test_pred))
     
-    
-
+#%%
 
 outcome = pd.DataFrame({'Actual': y_test, 'Predicted': y_test_pred.flatten()})
 outcome.head(10)
